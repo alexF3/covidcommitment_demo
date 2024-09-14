@@ -2,6 +2,9 @@ import streamlit as st
 import folium
 from geopy.geocoders import MapBox
 from folium.plugins import HeatMap
+# !pip install mapbox
+from mapbox import Geocoder
+
 
 import requests
 from streamlit_folium import st_folium
@@ -9,8 +12,27 @@ import geopandas as gpd
 import pandas as pd 
 import plotly.express as px
 import datetime as dt
+import os
+from dotenv import load_dotenv, find_dotenv
 
+# !pip install geopy -U
 # run with bash command from project folder: streamlit run /app.py
+
+# from dotenv import load_dotenv, find_dotenv
+# _ = load_dotenv(find_dotenv()) # read local .env file
+load_dotenv('.')
+
+# GEOCODING_API_KEY = os.getenv('GEOCODING_API_KEY')
+
+GEOCODING_API_KEY = st.secrets['GEOCODING_API_KEY']
+
+
+MAPBOX_API_KEY = os.getenv('MAPBOX_API_KEY')
+ISOCHRONE_API_URL = os.getenv('ISOCHRONE_API_URL')
+
+ISOCHRONE_API_URL = "https://api.mapbox.com/isochrone/v1/mapbox/driving/"
+geocoder = Geocoder(access_token=MAPBOX_API_KEY)
+
 
 # counties shapefile from: https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.html
 counties = gpd.read_file('data/cb_2018_us_county_5m')
@@ -21,18 +43,6 @@ cases = pd.read_csv('data/cases15jul20.csv',dtype={'FIPS':str})
 cases_timeseries = pd.read_csv('data/cases_timeseries.csv', dtype={'FIPS':str})
 
 counties = counties.merge(cases,on='FIPS')
-
-# Mapbox API keys
-MAPBOX_API_KEY = "pk.eyJ1IjoiYWxleG1hcHN0aGluZ3MiLCJhIjoiY2xuMW91aTd6MDBvNzJqazJ4bHJudm42ZSJ9.4Hf9AIPC0VmIy3q7bnYXeQ"
-GEOCODING_API_KEY = "pk.eyJ1IjoiYWxleG1hcHN0aGluZ3MiLCJhIjoiY2xuMW91aTd6MDBvNzJqazJ4bHJudm42ZSJ9.4Hf9AIPC0VmIy3q7bnYXeQ"
-# MAPBOX_API_KEY = st.secrets["MAPBOX_API_KEY"]
-# GEOCODING_API_KEY = st.secrets["GEOCODING_API_KEY"]
-
-# Mapbox Geocoding API
-GEOCODING_API_URL = "https://api.mapbox.com/geocoding/v5/mapbox.places/"
-
-# Mapbox Isochrone API
-ISOCHRONE_API_URL = "https://api.mapbox.com/isochrone/v1/mapbox/driving/"
 
 # Initialize Mapbox geocoder
 geolocator = MapBox(api_key=GEOCODING_API_KEY)
@@ -53,10 +63,12 @@ with tab1:
     if zip_code:
 
         # Geocode the ZIP code to get its centroid
-        location = geolocator.geocode(f"{zip_code}, USA")
+        # location = geolocator.geocode(f"{zip_code}, USA")
+
+        location = geocoder.forward(f"{zip_code}, USA")
 
 
-        coordinates = location.raw["center"]
+        coordinates = location.json()['features'][0]['center']
         center = [float(coordinates[1]), float(coordinates[0])]
         # Make a request to Mapbox Isochrone API
         response = requests.get(
