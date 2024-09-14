@@ -2,7 +2,6 @@ import streamlit as st
 import folium
 from geopy.geocoders import MapBox
 from folium.plugins import HeatMap
-# !pip install mapbox
 from mapbox import Geocoder
 
 
@@ -13,16 +12,8 @@ import pandas as pd
 import plotly.express as px
 import datetime as dt
 import os
-from dotenv import load_dotenv, find_dotenv
 
-# !pip install geopy -U
-# run with bash command from project folder: streamlit run /app.py
 
-# from dotenv import load_dotenv, find_dotenv
-# _ = load_dotenv(find_dotenv()) # read local .env file
-load_dotenv('.')
-
-# GEOCODING_API_KEY = os.getenv('GEOCODING_API_KEY')
 
 GEOCODING_API_KEY = st.secrets['GEOCODING_API_KEY']
 
